@@ -9,7 +9,7 @@ $repositoryRoot = $PSScriptRoot
 $context = Get-StreamProofBuildContext -Root $repositoryRoot -BaseJar $BaseJar -JavaHome $JavaHome
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $repositoryRoot 'dist' }
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
-$output = Join-Path $OutputDirectory 'BetterKeystrokes-1.8.9-StreamProof-v5-OBS.jar'
+$output = Join-Path $OutputDirectory 'BetterKeystrokesPlus-1.8.9-v0.6.0.jar'
 if ([IO.Path]::GetFullPath($output) -eq [IO.Path]::GetFullPath($context.BaseJar)) { throw 'Output must not overwrite the base JAR.' }
 $sources = @(Get-ChildItem -LiteralPath (Join-Path $repositoryRoot 'src') -Recurse -Filter '*.java' -File | ForEach-Object FullName)
 & $context.Javac -source 8 -target 8 -encoding UTF-8 -classpath $context.Classpath -d $context.Classes @sources

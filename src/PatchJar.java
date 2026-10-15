@@ -64,6 +64,10 @@ public final class PatchJar implements Opcodes {
                         add.add(new TypeInsnNode(NEW,"streamproof/StreamProof")); add.add(new InsnNode(DUP));
                         add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/StreamProof","<init>","()V",false));
                         add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addModule","(Lkeystrokesmod/client/module/Module;)V",false));
+                        add.add(new VarInsnNode(ALOAD,0));
+                        add.add(new TypeInsnNode(NEW,"streamproof/BowAim")); add.add(new InsnNode(DUP));
+                        add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/BowAim","<init>","()V",false));
+                        add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addModule","(Lkeystrokesmod/client/module/Module;)V",false));
                         m.instructions.insertBefore(i.getPrevious(),add); changed=true;
                     }
                 }
@@ -85,6 +89,29 @@ public final class PatchJar implements Opcodes {
                         call.setOpcode(INVOKESTATIC); call.owner=OVERLAY; call.name="cancelEvent";
                         call.desc="(Lnet/minecraftforge/fml/common/eventhandler/Event;Z)V"; call.itf=false; changed=true;
                     }
+                }
+            }
+            boolean healthModule=c.name.endsWith("/Nametags") || c.name.endsWith("/ExplicitB9NameTags") || c.name.endsWith("/PlayerESP");
+            if (healthModule && m.name.equals("<init>")) {
+                for (AbstractInsnNode i:m.instructions.toArray()) if (i.getOpcode()==RETURN) {
+                    InsnList add=new InsnList(); add.add(new VarInsnNode(ALOAD,0));
+                    add.add(new MethodInsnNode(INVOKESTATIC,"streamproof/HealthData","attach","(Lkeystrokesmod/client/module/Module;)V",false));
+                    m.instructions.insertBefore(i,add); changed=true;
+                }
+            }
+            if (healthModule || c.name.equals("keystrokesmod/client/utils/Utils$HUD")) {
+                for (AbstractInsnNode i:m.instructions.toArray()) if (i instanceof MethodInsnNode) {
+                    MethodInsnNode call=(MethodInsnNode)i;
+                    String reader=call.name.equals("func_110143_aJ") ? "health" : call.name.equals("func_110138_aP") ? "maximum"
+                        : call.name.equals("func_110139_bj") ? "absorption" : null;
+                    if (reader==null || !call.desc.equals("()F") || call.getOpcode()!=INVOKEVIRTUAL) continue;
+                    boolean esp=c.name.endsWith("Utils$HUD");
+                    if (esp && reader.equals("absorption")) continue;
+                    if (!esp) m.instructions.insertBefore(call,new VarInsnNode(ALOAD,0));
+                    call.setOpcode(INVOKESTATIC); call.owner="streamproof/HealthData";
+                    call.name=esp ? (reader.equals("health") ? "espHealth" : "espMaximum") : reader;
+                    call.desc=esp ? "(Ljava/lang/Object;)F" : "(Ljava/lang/Object;Lkeystrokesmod/client/module/Module;)F";
+                    call.itf=false; changed=true;
                 }
             }
             if (shouldWrap(c.name,m)) {
