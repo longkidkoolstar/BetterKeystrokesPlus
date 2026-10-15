@@ -3,7 +3,7 @@
 Personal feature extension and patch builder maintained by **longkidkoolstar**
 for the supplied Minecraft 1.8.9 BetterKeystrokes/Raven b+ client.
 
-**Current release: 0.6.0 (Tab health and experimental Bow Aim).** The owner reports that the earlier v5 overlay works in
+**Current release: 0.7.0 (adaptive bow prediction).** The owner reports that the earlier v5 overlay works in
 their Minecraft/OBS setup. This is a user report, not a guarantee across recorders,
 OBS versions, drivers, or machines.
 
@@ -12,7 +12,8 @@ OBS versions, drivers, or machines.
 - **Tab health:** choose Entity or Tab independently in Nametags,
   `(ExplicitB9)NameTags`, and PlayerESP's health bar.
 - **Bow Aim:** opt-in aim while drawing, with charge-dependent gravity/air-drag
-  compensation, movement prediction, range/FOV, and smooth frame-rate turning.
+  compensation, motion history and optional repeated-strafe prediction,
+  range/FOV, and smooth frame-rate turning.
 - **OBS native mode:** GPU-only overlay composition with a clean read framebuffer
   targeting OBS 30.1 OpenGL Game Capture. Permits testing ordinary F11 fullscreen.
 - **Desktop overlay mode:** separate, click-through window with Windows capture
@@ -40,7 +41,7 @@ cd BetterKeystrokesPlus
 ```
 
 The builder checks the base SHA-256, downloads and checks dependency hashes, and
-writes `dist/BetterKeystrokesPlus-1.8.9-v0.6.0.jar` plus build metadata.
+writes `dist/BetterKeystrokesPlus-1.8.9-v0.7.0.jar` plus build metadata.
 It does not modify the input JAR, install a mod, edit configs, or operate OBS.
 An original JAR renamed to `.jar.disabled` is also accepted when passed explicitly.
 Use `-JavaHome 'D:/Java/jdk8'` if the required JDK is not on PATH.
@@ -86,10 +87,31 @@ ignoring teammates/friends. It skips invisible/dead players, blocked line of sig
 and entities rejected by the existing AntiBot module. Friend filtering uses the
 existing AimAssist friend list. Disable other aim modules while testing it.
 
-The first version models vanilla 1.8.9 air drag/gravity and constant target
-velocity, aiming at the torso. It does not predict future dodges, latency, water
-drag, custom server physics, or guarantee an unobstructed complete arrow arc.
-Live server health/aim behavior still needs user verification.
+Distance and bow charge determine arrow drop and flight time. Version 0.7.0 keeps
+up to 96 ticks of motion history per nearby player while Bow Aim is enabled,
+including between draws. Small stationary jitter is ignored; stops and reversals
+replace stale movement estimates. Brief vertical motion uses a bounded jump
+estimate, with a recent ground level when available.
+
+**Strafe patterns** (default ON) recognizes repeated horizontal cycles only after
+at least three matching cycles with several direction changes. It blends the
+cycle forecast according to its fit and falls back to recent movement when a new
+stop/turn breaks the match. Irregular movement is not treated as a learned pattern.
+Patterns are kept locally in memory and reset on world changes, missed samples,
+teleports, or disabling the module. Prediction runs at game tick rate; no learning
+work runs in the render loop.
+
+**Prediction horizon (ticks)** (default 40, range 5–60) caps motion extrapolation,
+not arrow flight or range. **Lead strength (%)** (default 100, range 0–120) tunes
+the predicted movement offset. Set **Strafe patterns OFF** for recent-movement
+prediction only, or **Movement prediction OFF** for stationary-target aiming.
+The module's description shows the last target distance, estimated flight time,
+and prediction mode (Still, Strafe, Recent motion, or Off).
+
+These are estimates from observed movement. Sudden future dodges, latency, water,
+custom server physics, unknown terrain and collisions remain unmodeled. A clear
+line of sight does not guarantee a clear complete arrow arc. Live server aim
+behavior still needs user verification.
 
 ## Verification
 
@@ -106,7 +128,9 @@ bytecode. `-CompatibilityJava` optionally selects another Java 8 executable, suc
 the launcher runtime, for the legacy JNA compatibility probes.
 
 Checks cover modified bytecode and health/module hooks, scoreboard fixtures,
-independently simulated arrow interceptions, overlay separation, color/row conversion, borderless
+independently simulated arrow interceptions, distance/charge regressions, stationary
+jitter, stops, reversals, noisy repeating strafes, irregular-motion fallback and
+history resets, overlay separation, color/row conversion, borderless
 restoration, a real display swap, an OBS 30.1 copy-sequence simulation, and ASM 5
 transformer compatibility. Test windows remain hidden. They do not start Minecraft,
 OBS, a recording, or a stream. The GitHub workflow checks repository hygiene,

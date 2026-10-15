@@ -9,7 +9,8 @@ $repositoryRoot = $PSScriptRoot
 $context = Get-StreamProofBuildContext -Root $repositoryRoot -BaseJar $BaseJar -JavaHome $JavaHome
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $repositoryRoot 'dist' }
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
-$output = Join-Path $OutputDirectory 'BetterKeystrokesPlus-1.8.9-v0.6.0.jar'
+$version = (Get-Content -LiteralPath (Join-Path $repositoryRoot 'VERSION') -Raw).Trim()
+$output = Join-Path $OutputDirectory "BetterKeystrokesPlus-1.8.9-v$version.jar"
 if ([IO.Path]::GetFullPath($output) -eq [IO.Path]::GetFullPath($context.BaseJar)) { throw 'Output must not overwrite the base JAR.' }
 $sources = @(Get-ChildItem -LiteralPath (Join-Path $repositoryRoot 'src') -Recurse -Filter '*.java' -File | ForEach-Object FullName)
 & $context.Javac -source 8 -target 8 -encoding UTF-8 -classpath $context.Classpath -d $context.Classes @sources
@@ -17,7 +18,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Compilation failed.' }
 & $context.Java -classpath "$($context.Classes);$($context.Classpath)" PatchJar $context.BaseJar $output $context.Classes
 if ($LASTEXITCODE -ne 0) { throw 'Patching failed.' }
 $metadata = [ordered]@{
-    version=(Get-Content -LiteralPath (Join-Path $repositoryRoot 'VERSION') -Raw).Trim()
+    version=$version
     baseSha256=$context.BaseHash
     outputSha256=(Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash.ToLowerInvariant()
     builtAtUtc=[DateTime]::UtcNow.ToString('o')

@@ -1,6 +1,10 @@
 package streamproof;
 
 import java.util.List;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Locale;
 import keystrokesmod.client.module.Module;
 import keystrokesmod.client.module.setting.impl.DescriptionSetting;
 import keystrokesmod.client.module.setting.impl.SliderSetting;
@@ -14,24 +18,35 @@ public final class BowAim extends Module {
     private final SliderSetting fov=new SliderSetting("FOV",60,5,180,1);
     private final SliderSetting turnSpeed=new SliderSetting("Turn speed (degrees/sec)",180,15,720,15);
     private final TickSetting prediction=new TickSetting("Movement prediction",true);
+    private final TickSetting patterns=new TickSetting("Strafe patterns",true);
+    private final SliderSetting horizon=new SliderSetting("Prediction horizon (ticks)",40,5,60,5);
+    private final SliderSetting strength=new SliderSetting("Lead strength (%)",100,0,120,5);
     private final TickSetting teams=new TickSetting("Ignore teammates",true);
     private final TickSetting friends=new TickSetting("Ignore friends",true);
     private final DescriptionSetting status=new DescriptionSetting("Aims while drawing; release the arrow yourself");
     private Object minecraft, player, target;
+    private Object trackedWorld;
+    private final Map<Object,MotionHistory> histories=new IdentityHashMap<>();
     private double goalYaw,goalPitch;
     private boolean aiming;
     private long lastFrame;
     public BowAim() {
         super("Bow Aim",ModuleCategory.combat);
-        withDescription("Experimental bow aim while drawing: gravity, air drag and optional movement prediction.");
+        withDescription("Bow aim with distance/charge compensation and adaptive movement prediction.");
         registerSetting(range); registerSetting(fov); registerSetting(turnSpeed);
-        registerSetting(prediction); registerSetting(teams); registerSetting(friends); registerSetting(status);
+        registerSetting(prediction); registerSetting(patterns); registerSetting(horizon); registerSetting(strength);
+        registerSetting(teams); registerSetting(friends); registerSetting(status);
     }
-    @Override public void onDisable() { aiming=false; target=null; player=null; lastFrame=0; }
-    private boolean drawing() throws ReflectiveOperationException {
+    @Override public void onDisable() {
+        aiming=false; target=null; player=null; lastFrame=0; histories.clear(); trackedWorld=null;
+    }
+    private boolean context() throws ReflectiveOperationException {
         if (minecraft==null) minecraft=GameAccess.call(Class.forName("net.minecraft.client.Minecraft"),"func_71410_x|getMinecraft");
         player=GameAccess.get(minecraft,"field_71439_g|thePlayer");
-        if (player==null || GameAccess.get(minecraft,"field_71462_r|currentScreen")!=null
+        return player!=null && GameAccess.get(minecraft,"field_71441_e|theWorld")!=null;
+    }
+    private boolean drawing() throws ReflectiveOperationException {
+        if (!context() || GameAccess.get(minecraft,"field_71462_r|currentScreen")!=null
             || !Boolean.TRUE.equals(GameAccess.call(player,"func_70089_S|isEntityAlive"))
             || !Boolean.TRUE.equals(GameAccess.call(player,"func_71039_bw|isUsingItem"))) return false;
         Object stack=GameAccess.call(player,"func_71011_bu|getItemInUse");
@@ -42,31 +57,60 @@ public final class BowAim extends Module {
     @Override public void update() {
         aiming=false;
         try {
+            if (!context()) { histories.clear(); trackedWorld=null; target=null; return; }
+            Object world=GameAccess.get(minecraft,"field_71441_e|theWorld");
+            List<?> players=(List<?>)GameAccess.get(world,"field_73010_i|playerEntities");
+            track(world,players);
             if (!drawing()) { target=null; lastFrame=0; return; }
             double speed=BowPhysics.speed((int)GameAccess.value(player,"func_71057_bx|getItemInUseDuration"));
             if (speed<=0) return;
-            Object world=GameAccess.get(minecraft,"field_71441_e|theWorld");
-            if (world==null) return;
-            List<?> players=(List<?>)GameAccess.get(world,"field_73010_i|playerEntities");
             double yaw=GameAccess.number(player,"field_70177_z|rotationYaw");
             double pitch=GameAccess.number(player,"field_70125_A|rotationPitch");
             Object best=null; double[] solution=null; double bestAngle=Double.POSITIVE_INFINITY;
+            String bestMode="Off";
             for (Object candidate:players) {
                 if (candidate==player) continue;
                 double directYaw=Math.toDegrees(Math.atan2(z(candidate)-z(player),x(candidate)-x(player)))-90;
                 if (Math.abs(BowPhysics.wrap(directYaw-yaw))>fov.getInput()/2+5) continue;
                 if (!valid(candidate)) continue;
-                double[] aim=solve(candidate,speed,yaw);
+                MotionHistory history=histories.get(candidate);
+                MotionHistory.Forecast forecast=prediction.isToggled() && history!=null
+                    ? history.forecast(patterns.isToggled(),(int)horizon.getInput(),strength.getInput()/100) : null;
+                double[] aim=solve(candidate,speed,yaw,forecast==null ? BowPhysics.STILL : forecast);
                 if (aim==null) continue;
                 double angle=Math.hypot(BowPhysics.wrap(aim[0]-yaw),aim[1]-pitch);
                 if (angle>fov.getInput()/2) continue;
                 // Small retention bias prevents switching between neighboring players each tick.
                 double rank=angle*(candidate==target ? 0.8 : 1);
-                if (rank<bestAngle) { bestAngle=rank; best=candidate; solution=aim; }
+                if (rank<bestAngle) {
+                    bestAngle=rank; best=candidate; solution=aim; bestMode=forecast==null ? "Off" : forecast.mode;
+                }
             }
             target=best;
-            if (solution!=null) { goalYaw=solution[0]; goalPitch=solution[1]; aiming=true; }
+            if (solution!=null) {
+                goalYaw=solution[0]; goalPitch=solution[1]; aiming=true;
+                double distance=Math.sqrt(square(x(best)-x(player))+square(y(best)-y(player))+square(z(best)-z(player)));
+                status.setDesc(String.format(Locale.ROOT,"%.0f blocks / %.2fs / %s",distance,solution[2]/20,bestMode));
+            }
         } catch (ReflectiveOperationException | RuntimeException e) { fail(e); }
+    }
+    private void track(Object world,List<?> players) throws ReflectiveOperationException {
+        if (world!=trackedWorld) { histories.clear(); trackedWorld=world; target=null; lastFrame=0; }
+        long tick=((Number)GameAccess.call(world,"func_82737_E|getTotalWorldTime")).longValue();
+        double limit=range.getInput()+16;
+        for (Object candidate:players) {
+            if (candidate==player) continue;
+            double dx=x(candidate)-x(player),dz=z(candidate)-z(player);
+            if (dx*dx+dz*dz>limit*limit) continue;
+            MotionHistory history=histories.get(candidate);
+            if (history==null) { history=new MotionHistory(); histories.put(candidate,history); }
+            history.sample(tick,x(candidate),y(candidate),z(candidate),Boolean.TRUE.equals(GameAccess.get(candidate,"field_70122_E|onGround")));
+        }
+        Iterator<MotionHistory> iterator=histories.values().iterator();
+        while (iterator.hasNext()) {
+            long seen=iterator.next().lastTick();
+            if (seen==Long.MIN_VALUE || seen>tick || tick-seen>5) iterator.remove();
+        }
     }
     private boolean valid(Object candidate) throws ReflectiveOperationException {
         if (candidate==player || !Boolean.TRUE.equals(GameAccess.call(candidate,"func_70089_S|isEntityAlive"))
@@ -81,13 +125,7 @@ public final class BowAim extends Module {
         }
         return !Boolean.TRUE.equals(GameAccess.call(Class.forName("keystrokesmod.client.module.modules.world.AntiBot"),"bot",candidate));
     }
-    private double[] solve(Object candidate,double speed,double yaw) throws ReflectiveOperationException {
-        double vx=0,vy=0,vz=0;
-        if (prediction.isToggled()) {
-            vx=clamp(x(candidate)-GameAccess.number(candidate,"field_70169_q|prevPosX"),-1.5,1.5);
-            vy=clamp(y(candidate)-GameAccess.number(candidate,"field_70167_r|prevPosY"),-1,1);
-            vz=clamp(z(candidate)-GameAccess.number(candidate,"field_70166_s|prevPosZ"),-1.5,1.5);
-        }
+    private double[] solve(Object candidate,double speed,double yaw,BowPhysics.TargetPath path) throws ReflectiveOperationException {
         double dx=x(candidate)-x(player),dz=z(candidate)-z(player);
         double dy=y(candidate)+GameAccess.number(candidate,"field_70131_O|height")*0.55
             -y(player)-GameAccess.value(player,"func_70047_e|getEyeHeight")+0.1;
@@ -95,7 +133,7 @@ public final class BowAim extends Module {
         for (int i=0;i<2;i++) {
             // Vanilla arrows spawn 0.16 blocks to the side of the shooter's eyes.
             aim=BowPhysics.solve(dx+Math.cos(Math.toRadians(yaw))*0.16,dy,
-                dz+Math.sin(Math.toRadians(yaw))*0.16,vx,vy,vz,speed);
+                dz+Math.sin(Math.toRadians(yaw))*0.16,speed,path);
             if (aim==null) return null;
             yaw=aim[0];
         }
@@ -128,5 +166,5 @@ public final class BowAim extends Module {
     private static double x(Object o) throws ReflectiveOperationException { return GameAccess.number(o,"field_70165_t|posX"); }
     private static double y(Object o) throws ReflectiveOperationException { return GameAccess.number(o,"field_70163_u|posY"); }
     private static double z(Object o) throws ReflectiveOperationException { return GameAccess.number(o,"field_70161_v|posZ"); }
-    private static double clamp(double v,double min,double max) { return Math.max(min,Math.min(max,v)); }
+    private static double square(double v) { return v*v; }
 }

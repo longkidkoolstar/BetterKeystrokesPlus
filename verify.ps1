@@ -7,7 +7,8 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'scripts/BuildContext.ps1')
 $context = Get-StreamProofBuildContext -Root $PSScriptRoot -BaseJar $BaseJar -JavaHome $JavaHome
-$jar = Join-Path $PSScriptRoot 'dist/BetterKeystrokesPlus-1.8.9-v0.6.0.jar'
+$version = (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'VERSION') -Raw).Trim()
+$jar = Join-Path $PSScriptRoot "dist/BetterKeystrokesPlus-1.8.9-v$version.jar"
 if (-not (Test-Path -LiteralPath $jar)) { throw 'Run build.ps1 first.' }
 $testClasses = Join-Path $PSScriptRoot '.build/classes-test'
 New-Item -ItemType Directory -Force -Path $testClasses | Out-Null
@@ -20,6 +21,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Test compilation failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Bytecode checks failed.' }
 & $context.Java -Xverify:all -classpath $classpath streamproof.HealthBowProbe
 if ($LASTEXITCODE -ne 0) { throw 'Health/bow checks failed.' }
+& $context.Java -Xverify:all -classpath $classpath streamproof.MotionPredictionProbe
+if ($LASTEXITCODE -ne 0) { throw 'Adaptive motion prediction checks failed.' }
 $natives = Join-Path $PSScriptRoot '.build/natives'
 New-Item -ItemType Directory -Force -Path $natives | Out-Null
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -36,6 +39,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Desktop overlay probe failed.' }
 if (-not $CompatibilityJava) { $CompatibilityJava = $context.Java }
 & $CompatibilityJava -Xverify:all -classpath $classpath streamproof.HealthBowProbe
 if ($LASTEXITCODE -ne 0) { throw 'Legacy Java health/bow checks failed.' }
+& $CompatibilityJava -Xverify:all -classpath $classpath streamproof.MotionPredictionProbe
+if ($LASTEXITCODE -ne 0) { throw 'Legacy Java adaptive prediction checks failed.' }
 $legacyClasspath = "$($deps['jna-legacy']);$classpath"
 & $CompatibilityJava "-Dorg.lwjgl.librarypath=$natives" -Xverify:all -classpath $legacyClasspath OverlayProbe
 if ($LASTEXITCODE -ne 0) { throw 'Legacy JNA overlay probe failed.' }

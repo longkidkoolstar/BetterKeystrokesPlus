@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0 — Adaptive bow prediction
+
+- Retained distance, charge, gravity and air-drag compensation; added independent
+  forward simulations at 5, 20, 50 and 80 blocks plus partial-charge regression.
+- Replaced one-tick linear movement with a bounded local history, stationary jitter
+  suppression, faster stop/reversal response and a short vertical-motion estimate.
+- Added opt-out repeated-strafe prediction after three matching cycles, with
+  confidence blending and fallback when recent movement breaks the match.
+- Added Prediction horizon and Lead strength controls. The module description shows
+  target distance, flight time and prediction mode. Activation remains bow draw.
+- Added deterministic tests for noisy forward strafes, irregular motion, stop/turn
+  fallback, teleports, missing/duplicate samples and history/horizon bounds.
+- Kept Tab health and the v5 overlay behavior. New aim behavior needs live testing.
+
 ## 0.6.0 — Tab health and experimental Bow Aim
 
 - Added independent Entity/Tab health selectors to Nametags, ExplicitB9NameTags,
