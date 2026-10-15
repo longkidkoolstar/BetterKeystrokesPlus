@@ -1,4 +1,4 @@
-# BetterKeystrokes Stream Proof
+# BetterKeystrokes+
 
 Personal Stream Proof extension and patch builder maintained by **longkidkoolstar**
 for the supplied Minecraft 1.8.9 BetterKeystrokes/Raven b+ client.
@@ -30,8 +30,8 @@ Requirements: Windows, PowerShell, a Java 8 **JDK** with `java` and `javac` on P
 and internet access for pinned public build dependencies.
 
 ```powershell
-git clone https://github.com/longkidkoolstar/betterkeystrokes-streamproof.git
-cd betterkeystrokes-streamproof
+git clone https://github.com/longkidkoolstar/BetterKeystrokesPlus.git
+cd BetterKeystrokesPlus
 ./build.ps1 -BaseJar 'D:/Minecraft/mods/1.8.9.BetterKeystrokes.V-1.2.jar'
 ```
 

@@ -1,6 +1,7 @@
 # Maintenance instructions
 
-This repository is longkidkoolstar's personal BetterKeystrokes Stream Proof extension.
+This repository is longkidkoolstar's personal BetterKeystrokes+ extension project.
+Canonical GitHub repository: https://github.com/longkidkoolstar/BetterKeystrokesPlus
 Use it as the source of truth for future feature requests.
 
 ## Preserve the working behavior
