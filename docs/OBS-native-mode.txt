@@ -1,0 +1,77 @@
+Stream Proof EXPERIMENTAL v5 — OBS Game Capture / native fullscreen experiment
+
+This is a separate experiment. Keep your working v3/v4 JAR as a rollback copy.
+Your installed mod and config files were not changed to create this build.
+It is NOT an all-recorder solution. Native OBS mode deliberately shows the composite
+in the game's actual displayed image, so OBS Display Capture, other screen-capture
+methods, and external capture can include the mod visuals.
+
+INSTALL AND TRY
+1. Close Minecraft. Replace the enabled BetterKeystrokes experimental JAR with
+   BetterKeystrokes-1.8.9-StreamProof-Experimental-v5-OBS.jar.
+   Only one BetterKeystrokes version may be enabled at a time.
+2. Launch Minecraft and enter a world, initially windowed for the first test.
+3. In the mod click GUI, open Client and RIGHT-CLICK Stream Proof to expand settings.
+4. Set OBS native mode ON. Leave Borderless fullscreen OFF.
+5. Set Overlay FPS to 60 to start (adjustable from 10 to 240).
+6. Enable Stream Proof, or press F9. You can now try Minecraft's F11 fullscreen.
+   OBS native mode also permits activation while Minecraft is already fullscreen.
+7. In OBS use GAME CAPTURE for Minecraft. Turn Capture third-party overlays OFF.
+   Do not use Display Capture or Window Capture for this native-mode test.
+8. Make a short private/local recording with the HUD, ESP, and click GUI visible.
+   Compare the saved video against your actual screen, including fullscreen,
+   resizing, Alt-Tab, F9 toggling, and a restart. Verify before using it for a stream.
+
+SETTINGS
+OBS native mode OFF: retains the capture-excluded separate desktop window approach
+from v4, with Borderless fullscreen and CPU readback optimizations.
+OBS native mode ON: keeps the overlay on the GPU and composites it into the local
+game display. The Borderless fullscreen setting is ignored in this mode.
+Overlay FPS controls how often mod visuals are regenerated. The game image and
+native composition can run faster. Higher values improve overlay smoothness at
+additional rendering cost. High values are especially costly in desktop-window mode.
+Changing OBS native mode while enabled restarts Stream Proof's rendering path.
+
+HOW THE EXPERIMENT WORKS
+The build adds an opt-in presentation boundary at Minecraft's Display.update call.
+Before presentation it saves a clean game image in a GPU framebuffer, composites
+the mod overlay into the local backbuffer, and selects the clean framebuffer as
+the OpenGL read source through the display swap. It restores the original read
+framebuffer and buffer selector afterward, including on an exception.
+
+The installed OBS version checked on this machine was 30.1.0. Its OpenGL game-
+capture copy path binds a destination framebuffer while preserving the caller's
+read framebuffer. This prototype relies on that behavior. It is not a supported
+OBS integration/API and may stop working with another version, renderer, capture
+path, graphics driver, or another program that changes the read framebuffer.
+No OBS binaries, settings, processes, or capture hooks were changed by this build.
+
+VALIDATION COMPLETED
+- Java 8 compilation; modified/new bytecode data-flow verification.
+- Existing capture-excluded window, GPU separation, optimized CPU readback,
+  borderless-window restore, and Java 8u51 / JNA 3.4 compatibility probes.
+- Production GPU compositor test in a hidden, double-buffered OpenGL window:
+  local backbuffer contained a red overlay, while the OBS 30.1 copy sequence
+  received the clean blue image. Original read state was restored afterward.
+- Real Display.update/swap test and restoration of additional texture-unit state.
+- Native mode did not allocate CPU image/readback buffers; switching back to
+  desktop mode reinitialized them correctly.
+- Presentation transformer matched the actual Minecraft 1.8.9 client bytecode,
+  including a compatibility run against Forge's ASM 5.0.3.
+- Test/benchmark classes are excluded from the delivered runtime JAR.
+
+NOT YET VERIFIED
+No end-to-end Minecraft + OBS recording, real exclusive-fullscreen session,
+or in-game FPS benchmark has been performed for v5. The isolated copy-sequence
+test is not proof of recording invisibility in your actual OBS session.
+
+OTHER LIMITS AND ROLLBACK
+The same supported overlay entrypoints and blocked scene-changing/incompatible
+modules from v4 remain. Disabled modules are not automatically re-enabled.
+Mod config saving still uses the same paths; the existing config backup is separate.
+If native mode is unavailable, Stream Proof switches off and normal visuals are
+capturable. Errors/diagnostics start with [StreamProof] in game/Prism logs.
+To return to the working version: close Minecraft, remove v5, and restore v3/v4.
+
+Source examined:
+https://github.com/obsproject/obs-studio/blob/30.1.0/plugins/win-capture/graphics-hook/gl-capture.c

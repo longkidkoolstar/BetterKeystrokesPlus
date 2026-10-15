@@ -1,0 +1,15 @@
+.build/
+dist/
+input/
+*.jar
+*.jar.disabled
+*.class
+*.dll
+*.zip
+*.bplus
+*.log
+.env
+.env.*
+__pycache__/
+keystrokes/
+keystrokesmod/

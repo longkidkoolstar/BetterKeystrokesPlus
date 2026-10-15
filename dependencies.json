@@ -1,0 +1,50 @@
+[
+  {
+    "name": "forge",
+    "file": "forge-1.8.9-11.15.1.2318-1.8.9-universal.jar",
+    "url": "https://maven.minecraftforge.net/net/minecraftforge/forge/1.8.9-11.15.1.2318-1.8.9/forge-1.8.9-11.15.1.2318-1.8.9-universal.jar",
+    "sha256": "596512ad5f12f95d8a3170321543d4455d23b8fe649c68580c5f828fe74f6668"
+  },
+  {
+    "name": "lwjgl",
+    "file": "lwjgl-2.9.4-nightly-20150209.jar",
+    "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl/lwjgl/2.9.4-nightly-20150209/lwjgl-2.9.4-nightly-20150209.jar",
+    "sha256": "833e721817f70d1445eec13d8ce5a86e12af70efac5014356302e2bbc68b3fe2"
+  },
+  {
+    "name": "asm",
+    "file": "asm-9.9.1.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/ow2/asm/asm/9.9.1/asm-9.9.1.jar",
+    "sha256": "6f3828a215c920059a5efa2fb55c233d6c54ec5cadca99ce1b1bdd10077c7ddd"
+  },
+  {
+    "name": "asm-tree",
+    "file": "asm-tree-9.9.1.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-tree/9.9.1/asm-tree-9.9.1.jar",
+    "sha256": "0f3555096b720b820bbacab0b515589bee0200bee099bda14c561738ae837ba1"
+  },
+  {
+    "name": "asm-analysis",
+    "file": "asm-analysis-9.9.1.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-analysis/9.9.1/asm-analysis-9.9.1.jar",
+    "sha256": "6260bffc8ec008dd1b713702c7994e2c94d188a3da5bef9e87278a16df6a7522"
+  },
+  {
+    "name": "asm5",
+    "file": "asm-all-5.0.3.jar",
+    "url": "https://repo.maven.apache.org/maven2/org/ow2/asm/asm-all/5.0.3/asm-all-5.0.3.jar",
+    "sha256": "09d44e6adddaab9fd89ea3164c439f71c755769fa8d3a940352ab3d2003b98ff"
+  },
+  {
+    "name": "jna-legacy",
+    "file": "jna-3.4.0.jar",
+    "url": "https://libraries.minecraft.net/net/java/dev/jna/jna/3.4.0/jna-3.4.0.jar",
+    "sha256": "3bff6a1489b8e54cf130344bc5e8744db331045ad2fc736612576e1d80eb1f48"
+  },
+  {
+    "name": "lwjgl-natives",
+    "file": "lwjgl-platform-2.9.4-nightly-20150209-natives-windows.jar",
+    "url": "https://libraries.minecraft.net/org/lwjgl/lwjgl/lwjgl-platform/2.9.4-nightly-20150209/lwjgl-platform-2.9.4-nightly-20150209-natives-windows.jar",
+    "sha256": "f2e1f2c6bd7511a7504f389b8b716f5d8dc2fdc71e29c89b52644314cf0a228e"
+  }
+]

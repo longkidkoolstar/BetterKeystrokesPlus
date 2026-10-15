@@ -1,0 +1,56 @@
+Stream Proof EXPERIMENTAL v4 — performance and borderless mode
+
+INSTALL
+Close Minecraft and replace the enabled v3 experimental JAR with
+BetterKeystrokes-1.8.9-StreamProof-Experimental-v4.jar.
+Only one BetterKeystrokes version should be enabled at a time.
+This build uses the same config paths. No existing configs were edited to build it.
+The previously created backup remains available. Normal in-game config saving still applies.
+
+PERFORMANCE
+The game now draws redirected mod visuals only for overlay refresh frames, rather
+than drawing them at the game's full frame rate and discarding most of the results.
+The overlay reuses three image buffers and bulk-copies packed pixel rows instead of
+converting every pixel individually. It also avoids redundant window resizing.
+Default overlay refresh is still 30 FPS, at full resolution.
+
+Client > Stream Proof > Overlay FPS controls overlay refresh from 10 to 60 FPS.
+Try 20 or 15 for less overhead, or 45/60 for smoother overlays at greater cost.
+This slider controls the mod overlay only, not Minecraft's game FPS limit.
+GPU readback and Windows window composition still cost time; zero FPS loss is not promised.
+
+FULLSCREEN APPEARANCE
+1. Enter a world in WINDOWED mode. Leave Minecraft's ordinary fullscreen using F11.
+2. Enable Client > Stream Proof (or F9).
+3. Turn on Borderless fullscreen in that module's settings.
+The game window fills its current monitor, with no title bar, while remaining a
+desktop window so the separate capture-excluded overlay can stay above it.
+Turn the checkbox off to restore the previous window size and borders.
+Turning Stream Proof off also restores the previous window size and borders.
+Minecraft's F11 exclusive fullscreen is still unsupported while Stream Proof is active.
+Use the module checkbox instead of F11 for fullscreen appearance.
+A full-monitor window can cost more GPU time than a small window because it has more pixels.
+
+VALIDATION
+Java 8 compilation and bytecode checks passed.
+Native exclusion and OpenGL framebuffer separation tests passed with both the bundled
+JNA and Minecraft's Java 8u51 / JNA 3.4 combination.
+The production packed pixel readback was tested for color, orientation, and reuse.
+Skipping draw calls between overlay refreshes was checked.
+A hidden decorated Windows test window was made borderless and monitor-sized, then
+its original native window style and bounds were restored and checked.
+An isolated 1920x1080 CPU conversion benchmark over 40 frames measured approximately
+8.839 ms/frame for the old loop and 1.640 ms/frame for the bulk row copy in this run.
+This benchmark excludes GPU readback, Minecraft rendering, and desktop composition;
+it is NOT an in-game FPS benchmark and results vary.
+The user verified capture separation with v3. V4 still needs Minecraft/OBS verification,
+particularly after changing window mode or resolution.
+
+OTHER LIMITS
+This remains an experimental, recorder-dependent overlay, not a guarantee against all
+capture methods. Other mods and normal gameplay remain visible to capture.
+Scene-changing/incompatible modules are still blocked as in v3: Fullbright, Chams,
+Freecam, SumoFences, NameHider, AntiShuffle, StringEncrypt, FPSSpoofer,
+ClientNameSpoof, FakeChat, ChatLogger, DuelsStats. They do not automatically re-enable.
+If overlay startup fails, the mode turns off and ordinary visuals remain capturable.
+If you want to roll back, close Minecraft and replace v4 with the working v3 JAR.
