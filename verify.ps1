@@ -23,6 +23,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Bytecode checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Health/bow checks failed.' }
 & $context.Java -Xverify:all -classpath $classpath streamproof.MotionPredictionProbe
 if ($LASTEXITCODE -ne 0) { throw 'Adaptive motion prediction checks failed.' }
+& $context.Java -Xverify:all -classpath $classpath streamproof.RodAimProbe
+if ($LASTEXITCODE -ne 0) { throw 'Rod activation/trajectory checks failed.' }
 $natives = Join-Path $PSScriptRoot '.build/natives'
 New-Item -ItemType Directory -Force -Path $natives | Out-Null
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -41,6 +43,8 @@ if (-not $CompatibilityJava) { $CompatibilityJava = $context.Java }
 if ($LASTEXITCODE -ne 0) { throw 'Legacy Java health/bow checks failed.' }
 & $CompatibilityJava -Xverify:all -classpath $classpath streamproof.MotionPredictionProbe
 if ($LASTEXITCODE -ne 0) { throw 'Legacy Java adaptive prediction checks failed.' }
+& $CompatibilityJava -Xverify:all -classpath $classpath streamproof.RodAimProbe
+if ($LASTEXITCODE -ne 0) { throw 'Legacy Java rod checks failed.' }
 $legacyClasspath = "$($deps['jna-legacy']);$classpath"
 & $CompatibilityJava "-Dorg.lwjgl.librarypath=$natives" -Xverify:all -classpath $legacyClasspath OverlayProbe
 if ($LASTEXITCODE -ne 0) { throw 'Legacy JNA overlay probe failed.' }

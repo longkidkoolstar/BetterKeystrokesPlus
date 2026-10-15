@@ -7,7 +7,7 @@ import org.objectweb.asm.tree.analysis.*;
 
 public class VerifyBuild {
     public static void main(String[] args) throws Exception {
-        int classes=0, methods=0, redirects=0, healthSettings=0, healthReads=0, bowModules=0;
+        int classes=0, methods=0, redirects=0, healthSettings=0, healthReads=0, bowModules=0, rodModules=0, rodEvents=0;
         try(ZipFile jar=new ZipFile(args[0])) {
             Enumeration<? extends ZipEntry> es=jar.entries();
             while(es.hasMoreElements()) {
@@ -25,6 +25,7 @@ public class VerifyBuild {
                 if(!changed)continue;
                 classes++;
                 for(MethodNode m:c.methods) {
+                    if (c.name.equals("streamproof/RodAim") && PatchJar.subscribed(m))rodEvents++;
                     if((m.access&(Opcodes.ACC_ABSTRACT|Opcodes.ACC_NATIVE))!=0)continue;
                     new Analyzer<BasicValue>(new BasicVerifier()).analyze(c.name,m);methods++;
                     for(AbstractInsnNode i:m.instructions.toArray())if(i instanceof MethodInsnNode) {
@@ -34,6 +35,7 @@ public class VerifyBuild {
                             if(call.name.equals("attach"))healthSettings++; else healthReads++;
                         }
                         if(c.name.endsWith("/ModuleManager") && call.owner.equals("streamproof/BowAim") && call.name.equals("<init>"))bowModules++;
+                        if(c.name.endsWith("/ModuleManager") && call.owner.equals("streamproof/RodAim") && call.name.equals("<init>"))rodModules++;
                         if((c.name.endsWith("/Nametags") || c.name.endsWith("/ExplicitB9NameTags") || c.name.endsWith("Utils$HUD"))
                             && (call.name.equals("func_110143_aJ") || call.name.equals("func_110138_aP") || call.name.equals("func_110139_bj")))
                             throw new AssertionError("Unpatched health read in "+c.name+"."+m.name);
@@ -42,8 +44,8 @@ public class VerifyBuild {
             }
         }
         if(redirects!=19)throw new AssertionError("Expected 19 drawing wrappers, got "+redirects);
-        if(healthSettings!=3 || healthReads<10 || bowModules!=1)throw new AssertionError("Missing feature hooks: "+healthSettings+" / "+healthReads+" / "+bowModules);
+        if(healthSettings!=3 || healthReads<10 || bowModules!=1 || rodModules!=1 || rodEvents!=4)throw new AssertionError("Missing feature hooks: "+healthSettings+" / "+healthReads+" / "+bowModules+" / "+rodModules+" / "+rodEvents);
         System.out.println("PASS bytecode analysis: "+classes+" modified/new classes, "+methods+" methods, "+redirects+" render wrappers");
-        System.out.println("PASS feature integration: "+healthSettings+" health selectors, "+healthReads+" health reads, one Bow Aim module");
+        System.out.println("PASS feature integration: "+healthSettings+" health selectors, "+healthReads+" health reads, one Bow Aim module, one Rod Aim module");
     }
 }

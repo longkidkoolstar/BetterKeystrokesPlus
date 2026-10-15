@@ -2,11 +2,12 @@ package streamproof;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Cached SRG/MCP access without distributing Minecraft classes or sources. */
 public final class GameAccess {
-    private static final Map<String, Method> methods = new HashMap<>();
-    private static final Map<String, Field> fields = new HashMap<>();
+    private static final Map<String, Method> methods = new ConcurrentHashMap<>();
+    private static final Map<String, Field> fields = new ConcurrentHashMap<>();
     private GameAccess() {}
     public static Object call(Object target, String names, Object... args) throws ReflectiveOperationException {
         Class<?> type = target instanceof Class ? (Class<?>)target : target.getClass();

@@ -68,6 +68,10 @@ public final class PatchJar implements Opcodes {
                         add.add(new TypeInsnNode(NEW,"streamproof/BowAim")); add.add(new InsnNode(DUP));
                         add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/BowAim","<init>","()V",false));
                         add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addModule","(Lkeystrokesmod/client/module/Module;)V",false));
+                        add.add(new VarInsnNode(ALOAD,0));
+                        add.add(new TypeInsnNode(NEW,"streamproof/RodAim")); add.add(new InsnNode(DUP));
+                        add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/RodAim","<init>","()V",false));
+                        add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addModule","(Lkeystrokesmod/client/module/Module;)V",false));
                         m.instructions.insertBefore(i.getPrevious(),add); changed=true;
                     }
                 }

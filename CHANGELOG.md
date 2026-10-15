@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.0 — Rod Aim
+
+- Added Rod Aim under Combat, disabled by default. It turns smoothly while holding
+  an uncast rod and stops on cast input, an active hook, item switching or a GUI.
+- Kept casting/reeling manual. A bounded pending-cast pause covers server spawn
+  delay without remaining stuck after rejected casts.
+- Added the hook's own vanilla 1.8.9 air trajectory, including gravity-before-drag
+  order, speed and launch offset. Unreachable targets are skipped.
+- Reused motion history/strafe forecasts with independent range, FOV, turn speed,
+  prediction horizon, lead strength, teammate and friend settings.
+- Added rod activation timelines and independent stationary/moving hook tests.
+- Preserved Bow Aim, Tab health and the v5 overlay. Live rod fights need testing.
+
 ## 0.7.0 — Adaptive bow prediction
 
 - Retained distance, charge, gravity and air-drag compensation; added independent
