@@ -50,6 +50,10 @@ public final class PatchJar implements Opcodes {
                     add.add(new TypeInsnNode(NEW,"streamproof/AutoToolTransformer")); add.add(new InsnNode(DUP));
                     add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/AutoToolTransformer","<init>","()V",false));
                     add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addTransformer","(Lkeystrokesmod/client/tweaker/transformers/Transformer;)V",false));
+                    add.add(new VarInsnNode(ALOAD,0));
+                    add.add(new TypeInsnNode(NEW,"streamproof/InputSoundTransformer")); add.add(new InsnNode(DUP));
+                    add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/InputSoundTransformer","<init>","()V",false));
+                    add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addTransformer","(Lkeystrokesmod/client/tweaker/transformers/Transformer;)V",false));
                     m.instructions.insertBefore(i,add);changed=true;
                 }
             }
@@ -80,6 +84,10 @@ public final class PatchJar implements Opcodes {
                         add.add(new VarInsnNode(ALOAD,0));
                         add.add(new TypeInsnNode(NEW,"streamproof/RodAim")); add.add(new InsnNode(DUP));
                         add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/RodAim","<init>","()V",false));
+                        add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addModule","(Lkeystrokesmod/client/module/Module;)V",false));
+                        add.add(new VarInsnNode(ALOAD,0));
+                        add.add(new TypeInsnNode(NEW,"streamproof/InputSounds")); add.add(new InsnNode(DUP));
+                        add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/InputSounds","<init>","()V",false));
                         add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addModule","(Lkeystrokesmod/client/module/Module;)V",false));
                         m.instructions.insertBefore(i.getPrevious(),add); changed=true;
                     }
@@ -125,6 +133,16 @@ public final class PatchJar implements Opcodes {
                     call.name=esp ? (reader.equals("health") ? "espHealth" : "espMaximum") : reader;
                     call.desc=esp ? "(Ljava/lang/Object;)F" : "(Ljava/lang/Object;Lkeystrokesmod/client/module/Module;)F";
                     call.itf=false; changed=true;
+                }
+            }
+            for(AbstractInsnNode ins:m.instructions.toArray()) if(ins instanceof MethodInsnNode) {
+                MethodInsnNode call=(MethodInsnNode)ins;
+                String observer=call.owner.equals("net/minecraft/client/settings/KeyBinding") && call.name.equals("func_74510_a") && call.desc.equals("(IZ)V")
+                    ? "automatedKey" : c.name.endsWith("/AutoPlace") && call.owner.equals("keystrokesmod/client/utils/Utils$Client")
+                        && call.name.equals("setMouseButtonState") && call.desc.equals("(IZ)V") ? "placeMouse" : null;
+                if(observer!=null) {
+                    m.instructions.insertBefore(ins,new InsnNode(DUP2));
+                    m.instructions.insert(ins,new MethodInsnNode(INVOKESTATIC,"streamproof/InputSounds",observer,"(IZ)V",false)); changed=true;
                 }
             }
             if (shouldWrap(c.name,m)) {

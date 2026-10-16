@@ -30,6 +30,10 @@ Use it as the source of truth for future feature requests.
 - Auto Tool keeps its original module/setting identities. Save a return slot only
   for owned automatic switches, respect manual hotbar input, and keep deliberate
   combat mining possible. Restore before vanilla's attack held-item synchronization.
+- Mechvibes Bridge observes sound events only. Never inject OS/game input to make
+  audio. Keep transport loopback-only, numeric and unlogged, with bounded queues
+  and physical-input fallback. Portable sound-app builds/settings stay local;
+  do not modify the installed sound app or publish its runtime/packs/configs.
 
 ## Build and check
 

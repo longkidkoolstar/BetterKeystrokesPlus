@@ -3,12 +3,14 @@
 Personal feature extension and patch builder maintained by **longkidkoolstar**
 for the supplied Minecraft 1.8.9 BetterKeystrokes/Raven b+ client.
 
-**Current prerelease: 0.9.1 (Auto Tool switching and combat mining).** The owner reports that the earlier v5 overlay works in
+**Current prerelease: 0.10.0 (Mechvibes game-input sound bridge).** The owner reports that the earlier v5 overlay works in
 their Minecraft/OBS setup. This is a user report, not a guarantee across recorders,
 OBS versions, drivers, or machines.
 
 ## Features
 
+- **Mechvibes Bridge:** local sound events for actual auto-click/placement actions
+  and automated keys, using a separate Mechvibes copy with your selected sounds.
 - **Auto Tool:** reliable first-block switching and return-slot ownership, manual
   hotbar priority, and a configurable combat hold for deliberate mining under attack.
 - **Tab health:** choose Entity or Tab independently in Nametags,
@@ -44,7 +46,7 @@ cd BetterKeystrokesPlus
 ```
 
 The builder checks the base SHA-256, downloads and checks dependency hashes, and
-writes `dist/BetterKeystrokesPlus-1.8.9-v0.9.1.jar` plus build metadata.
+writes `dist/BetterKeystrokesPlus-1.8.9-v0.10.0.jar` plus build metadata.
 It does not modify the input JAR, install a mod, edit configs, or operate OBS.
 An original JAR renamed to `.jar.disabled` is also accepted when passed explicitly.
 Use `-JavaHome 'D:/Java/jdk8'` if the required JDK is not on PATH.
@@ -135,6 +137,19 @@ at a player, hold the same block for **Combat hold (ms)** (180 ms initially) bef
 an automatic tool switch. Sustained mining can continue across blocks while you
 take damage. This is a configurable intent heuristic, not perfect intent detection.
 Details and a gameplay checklist: [Auto Tool 0.9.1](docs/Auto-Tool-0.9.1.md).
+
+## Mechvibes Bridge
+
+Enable **Client > Mechvibes Bridge** with the separate portable Mechvibes companion
+running. Quit the original sound app first to avoid duplicate physical playback.
+The module defaults OFF. Actual left/right game clicks and automated key changes
+drive the selected sound packs; ordinary physical sounds resume outside gameplay.
+Settings, setup and scope: [Mechvibes Bridge 0.10.0](docs/Mechvibes-Bridge-0.10.0.md).
+
+The optional companion builder needs a reviewed local MechvibesPlusPlus v2.4.0
+installation and Python on Windows. Only patch/build source is published. Node.js
+is required for the public sound-router checks; it is not a runtime requirement
+for using the portable companion.
 
 ## Rod Aim
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.10.0 — Mechvibes game-input sound bridge (prerelease)
+
+- Added opt-in Client > Mechvibes Bridge for actual game click attempts, direct
+  AutoPlace actions and automated keyboard transitions such as SafeWalk's Shift.
+- Added a bounded asynchronous loopback-only sound sender. Sound hooks observe
+  existing actions without generating input or changing their arguments/results.
+- Added a portable MechvibesPlusPlus patch/build tool preserving current sound
+  choices and volumes in an independent settings folder. The original app is
+  untouched; portable copies do not register startup or offer upstream updates.
+- Added connected-game sound takeover to avoid duplicate physical/game playback,
+  with physical-input fallback outside gameplay or after heartbeat loss. Mute,
+  mouse sounds, key-up settings and current packs remain in control.
+- Added event/transport/router/bytecode checks and a silent hidden companion
+  self-test using real decoded sound packs. Audible gameplay requires user testing.
+- Preserved 0.9.1 Auto Tool behavior and the bow/rod/health/fullscreen/overlay code.
+
 ## 0.9.1 — Auto Tool switching and combat mining (prerelease)
 
 - Fixed first/same-material mining delays that could wait indefinitely. Delays

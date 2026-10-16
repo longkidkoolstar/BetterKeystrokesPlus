@@ -31,6 +31,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Bow accuracy/control checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Bow diagnostics checks failed.' }
 & $context.Java -Xverify:all -classpath $classpath streamproof.AutoToolProbe
 if ($LASTEXITCODE -ne 0) { throw 'Auto Tool ownership/intent checks failed.' }
+& $context.Java -Xverify:all -classpath $classpath streamproof.InputSoundProbe
+if ($LASTEXITCODE -ne 0) { throw 'Input sound event/transport checks failed.' }
+node (Join-Path $PSScriptRoot 'test/mechvibes-bridge.test.js')
+if ($LASTEXITCODE -ne 0) { throw 'Mechvibes routing checks failed.' }
 $natives = Join-Path $PSScriptRoot '.build/natives'
 New-Item -ItemType Directory -Force -Path $natives | Out-Null
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -57,6 +61,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Legacy Java bow accuracy checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Legacy Java bow diagnostics checks failed.' }
 & $CompatibilityJava -Xverify:all -classpath $classpath streamproof.AutoToolProbe
 if ($LASTEXITCODE -ne 0) { throw 'Legacy Java Auto Tool checks failed.' }
+& $CompatibilityJava -Xverify:all -classpath $classpath streamproof.InputSoundProbe
+if ($LASTEXITCODE -ne 0) { throw 'Legacy Java input sound checks failed.' }
 $legacyClasspath = "$($deps['jna-legacy']);$classpath"
 & $CompatibilityJava "-Dorg.lwjgl.librarypath=$natives" -Xverify:all -classpath $legacyClasspath OverlayProbe
 if ($LASTEXITCODE -ne 0) { throw 'Legacy JNA overlay probe failed.' }
@@ -65,6 +71,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Borderless restore probe failed.' }
 & $CompatibilityJava "-Dorg.lwjgl.librarypath=$natives" -Xverify:all -classpath $legacyClasspath streamproof.NativeCaptureProbe
 if ($LASTEXITCODE -ne 0) { throw 'Native OBS copy-sequence probe failed.' }
 if ($MinecraftJar) {
+    & $context.Java -Xverify:all -classpath $classpath InputSoundTransformerProbe $MinecraftJar
+    if ($LASTEXITCODE -ne 0) { throw 'Input sound transformer probe failed.' }
+    & $CompatibilityJava -Xverify:all -classpath "$($deps['asm5']);$classpath" InputSoundTransformerProbe $MinecraftJar
+    if ($LASTEXITCODE -ne 0) { throw 'ASM 5 input sound transformer probe failed.' }
     & $context.Java -Xverify:all -classpath $classpath AutoToolTransformerProbe $MinecraftJar
     if ($LASTEXITCODE -ne 0) { throw 'Auto Tool action transformer probe failed.' }
     & $CompatibilityJava -Xverify:all -classpath "$($deps['asm5']);$classpath" AutoToolTransformerProbe $MinecraftJar
