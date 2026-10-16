@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.9.0 — Bow accuracy and charging-flick fix (prerelease)
+
+- Separated stable full-draw camera aiming from actual-charge shot assessment, so
+  early charge does not steer toward a temporary steep arc.
+- Added a 150 ms steering ramp, bounded frame-time steps, target retention requiring
+  two ticks and 20% improvement, and frame-time refresh of the selected aim.
+- Added moving-hitbox interior points, bow-only terrain/landing projection, full
+  arrow-path checks for block shapes and intervening entities, and conservative
+  handling of liquids/unsupported collision data. Work is capped at 480 segments/tick.
+- Added capture-routed Ready/Adjusting/Blocked feedback with two-tick confirmation,
+  a 0.05-block hitbox margin and immediate angle/charge/staleness invalidation.
+- Added optional bounded local-ping timing compensation (OFF) and Shot diagnostics
+  (OFF). Logs contain immutable numeric snapshots, rotate at 10 MB total, and are
+  written on a background thread without player names, chat or server addresses.
+- Added conservative arrow matching and separate player-hit, observed block-miss
+  and unknown counters. Server hit markers do not identify the intended victim;
+  ambiguous matches/disappearances remain unknown.
+- Added control, collision, diagnostics, telemetry-transformer and HUD separation
+  probes. Preserved Rod Aim, Tab health and the v5 overlay implementation.
+- Live gameplay, the reported flick and hit-rate improvements still need user testing.
+
 ## 0.8.0 — Rod Aim
 
 - Added Rod Aim under Combat, disabled by default. It turns smoothly while holding

@@ -41,6 +41,10 @@ public final class PatchJar implements Opcodes {
                     add.add(new TypeInsnNode(NEW,"streamproof/DisplayTransformer"));add.add(new InsnNode(DUP));
                     add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/DisplayTransformer","<init>","()V",false));
                     add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addTransformer","(Lkeystrokesmod/client/tweaker/transformers/Transformer;)V",false));
+                    add.add(new VarInsnNode(ALOAD,0));
+                    add.add(new TypeInsnNode(NEW,"streamproof/BowTelemetryTransformer")); add.add(new InsnNode(DUP));
+                    add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/BowTelemetryTransformer","<init>","()V",false));
+                    add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addTransformer","(Lkeystrokesmod/client/tweaker/transformers/Transformer;)V",false));
                     m.instructions.insertBefore(i,add);changed=true;
                 }
             }

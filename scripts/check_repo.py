@@ -41,12 +41,17 @@ subprocess.run(["javac", "-source", "8", "-target", "8", "-encoding", "UTF-8", "
                 os.pathsep.join(jars), "-d", str(cache), str(root / "src" / "PatchJar.java")], check=True)
 print("PASS repository hygiene and standalone patcher compilation")
 standalone = [root / "src" / "streamproof" / (name + ".java")
-              for name in ("GameAccess", "TabHealth", "BowPhysics", "MotionHistory", "RodPhysics", "RodUse")]
+              for name in ("GameAccess", "TabHealth", "BowPhysics", "MotionHistory", "RodPhysics", "RodUse",
+                           "BowGeometry", "BowController", "BowFlight", "BowSolution", "BowForecast", "BowLog", "BowDiagnostics")]
 standalone.append(root / "test" / "HealthBowProbe.java")
 standalone.append(root / "test" / "MotionPredictionProbe.java")
 standalone.append(root / "test" / "RodAimProbe.java")
+standalone.append(root / "test" / "BowAccuracyProbe.java")
+standalone.append(root / "test" / "BowDiagnosticsProbe.java")
 subprocess.run(["javac", "-source", "8", "-target", "8", "-encoding", "UTF-8",
                 "-d", str(cache)] + [str(path) for path in standalone], check=True)
 subprocess.run(["java", "-Xverify:all", "-cp", str(cache), "streamproof.HealthBowProbe"], check=True)
 subprocess.run(["java", "-Xverify:all", "-cp", str(cache), "streamproof.MotionPredictionProbe"], check=True)
 subprocess.run(["java", "-Xverify:all", "-cp", str(cache), "streamproof.RodAimProbe"], check=True)
+subprocess.run(["java", "-Xverify:all", "-cp", str(cache), "streamproof.BowAccuracyProbe"], check=True)
+subprocess.run(["java", "-Xverify:all", "-cp", str(cache), "streamproof.BowDiagnosticsProbe"], check=True)

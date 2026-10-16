@@ -40,6 +40,21 @@ public class OverlayProbe {
             pixel.clear();GL11.glReadPixels(0,0,1,1,GL11.GL_RGBA,GL11.GL_UNSIGNED_BYTE,pixel);
             if((pixel.get(0)&255)!=0 || (pixel.get(2)&255)!=255)throw new AssertionError("Overlay leaked into main image");
             System.out.println("PASS OpenGL separation: overlay red, main image stayed blue, original framebuffer restored");
+            // Exercise the actual readiness-label drawing entrypoint, including failure cleanup.
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            streamproof.BowHud.paint(new streamproof.BowHud.Painter() { public void draw() {
+                GL11.glEnable(GL11.GL_DEPTH_TEST);GL11.glClearColor(0,1,0,1);GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
+            }});
+            if(GL11.glIsEnabled(GL11.GL_DEPTH_TEST) || GL11.glGetInteger(0x8CA6)!=original)throw new AssertionError("Readiness state leaked");
+            pixel.clear();GL11.glReadPixels(0,0,1,1,GL11.GL_RGBA,GL11.GL_UNSIGNED_BYTE,pixel);
+            if((pixel.get(2)&255)!=255 || (pixel.get(1)&255)!=0)throw new AssertionError("Readiness leaked to clean game");
+            int labelToken=Overlay.begin();pixel.clear();GL11.glReadPixels(0,0,1,1,GL11.GL_RGBA,GL11.GL_UNSIGNED_BYTE,pixel);
+            if((pixel.get(1)&255)!=255)throw new AssertionError("Readiness was not drawn in overlay");
+            GL11.glClearColor(1,0,0,1);GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);Overlay.end(labelToken);
+            try { streamproof.BowHud.paint(new streamproof.BowHud.Painter() { public void draw() throws ReflectiveOperationException { throw new ReflectiveOperationException("fixture"); }}); }
+            catch(ReflectiveOperationException expected) {}
+            if(GL11.glGetInteger(0x8CA6)!=original)throw new AssertionError("Readiness failure did not restore framebuffer");
+            System.out.println("PASS readiness HUD route: green label layer excluded from clean game, GL state and error cleanup restored");
             set("renderFrame",false);
             if(Overlay.begin()!=-1)throw new AssertionError("Overlay should skip draws between refresh frames");
             set("renderFrame",true);

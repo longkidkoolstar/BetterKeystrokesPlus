@@ -23,6 +23,10 @@ Use it as the source of truth for future feature requests.
 - Keep input JARs and dependencies in ignored locations. The supported base is pinned
   by SHA-256; investigate a mismatch rather than silently accepting a different client.
 - Do not overwrite an already-installed working build just to run a test.
+- Bow Aim 0.9.0 separates full-draw camera goals from actual-charge assessment.
+  Preserve this separation; partial-charge camera goals recreate the reported upward flick.
+- Ready is a conservative model check, not a guaranteed hit. Keep ambiguous arrow
+  outcomes unknown and diagnostic files local; never publish gameplay logs.
 
 ## Build and check
 
