@@ -8,6 +8,7 @@ import org.objectweb.asm.tree.analysis.*;
 public class VerifyBuild {
     public static void main(String[] args) throws Exception {
         int classes=0, methods=0, redirects=0, healthSettings=0, healthReads=0, bowModules=0, rodModules=0, rodEvents=0, bowHud=0, telemetry=0;
+        int toolTransformer=0,toolAttach=0,toolEvents=0,toolFinish=0,toolRender=0;
         try(ZipFile jar=new ZipFile(args[0])) {
             Enumeration<? extends ZipEntry> es=jar.entries();
             while(es.hasMoreElements()) {
@@ -26,6 +27,7 @@ public class VerifyBuild {
                 classes++;
                 for(MethodNode m:c.methods) {
                     if (c.name.equals("streamproof/RodAim") && PatchJar.subscribed(m))rodEvents++;
+                    if(c.name.endsWith("/player/AutoTool") && PatchJar.subscribed(m))toolEvents++;
                     if((m.access&(Opcodes.ACC_ABSTRACT|Opcodes.ACC_NATIVE))!=0)continue;
                     new Analyzer<BasicValue>(new BasicVerifier()).analyze(c.name,m);methods++;
                     for(AbstractInsnNode i:m.instructions.toArray())if(i instanceof MethodInsnNode) {
@@ -34,6 +36,14 @@ public class VerifyBuild {
                             if(c.name.equals("streamproof/BowHud"))bowHud++; else redirects++;
                         }
                         if(c.name.endsWith("/ASMTransformerClass") && call.owner.equals("streamproof/BowTelemetryTransformer") && call.name.equals("<init>"))telemetry++;
+                        if(c.name.endsWith("/ASMTransformerClass") && call.owner.equals("streamproof/AutoToolTransformer") && call.name.equals("<init>"))toolTransformer++;
+                        if(c.name.endsWith("/player/AutoTool") && call.owner.equals("streamproof/AutoToolHooks")) {
+                            if(call.name.equals("attach"))toolAttach++;
+                            if(call.name.equals("finish"))toolFinish++;
+                            if(call.name.equals("render"))toolRender++;
+                        }
+                        if(c.name.endsWith("/player/AutoTool") && m.name.equals("onRenderTick") && !call.owner.equals("streamproof/AutoToolHooks"))
+                            throw new AssertionError("Legacy Auto Tool render logic still active");
                         if(call.owner.equals("streamproof/HealthData")) {
                             if(call.name.equals("attach"))healthSettings++; else healthReads++;
                         }
@@ -48,7 +58,10 @@ public class VerifyBuild {
         }
         if(redirects!=19 || bowHud!=1 || telemetry!=1)throw new AssertionError("Expected 19 legacy drawing wrappers, HUD and telemetry hook: "+redirects+" / "+bowHud+" / "+telemetry);
         if(healthSettings!=3 || healthReads<10 || bowModules!=1 || rodModules!=1 || rodEvents!=4)throw new AssertionError("Missing feature hooks: "+healthSettings+" / "+healthReads+" / "+bowModules+" / "+rodModules+" / "+rodEvents);
+        if(toolTransformer!=1 || toolAttach!=1 || toolEvents!=4 || toolFinish!=3 || toolRender!=1)
+            throw new AssertionError("Missing Auto Tool integration: "+toolTransformer+" / "+toolAttach+" / "+toolEvents+" / "+toolFinish+" / "+toolRender);
         System.out.println("PASS bytecode analysis: "+classes+" modified/new classes, "+methods+" methods, "+redirects+" render wrappers");
         System.out.println("PASS feature integration: "+healthSettings+" health selectors, "+healthReads+" health reads, one Bow Aim module, one Rod Aim module");
+        System.out.println("PASS Auto Tool integration: existing module/config settings, four input/tick events, lifecycle cleanup and action transformer");
     }
 }

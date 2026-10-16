@@ -34,6 +34,7 @@ public final class PatchJar implements Opcodes {
     }
     static byte[] patch(byte[] bytes) {
         ClassNode c = new ClassNode(); new ClassReader(bytes).accept(c,0); boolean changed = false;
+        if(c.name.equals("keystrokesmod/client/module/modules/player/AutoTool")) { patchAutoTool(c); changed=true; }
         for (MethodNode m : new ArrayList<MethodNode>(c.methods)) {
             if(c.name.equals("keystrokesmod/client/tweaker/ASMTransformerClass") && m.name.equals("<init>")) {
                 for(AbstractInsnNode i:m.instructions.toArray()) if(i.getOpcode()==RETURN) {
@@ -44,6 +45,10 @@ public final class PatchJar implements Opcodes {
                     add.add(new VarInsnNode(ALOAD,0));
                     add.add(new TypeInsnNode(NEW,"streamproof/BowTelemetryTransformer")); add.add(new InsnNode(DUP));
                     add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/BowTelemetryTransformer","<init>","()V",false));
+                    add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addTransformer","(Lkeystrokesmod/client/tweaker/transformers/Transformer;)V",false));
+                    add.add(new VarInsnNode(ALOAD,0));
+                    add.add(new TypeInsnNode(NEW,"streamproof/AutoToolTransformer")); add.add(new InsnNode(DUP));
+                    add.add(new MethodInsnNode(INVOKESPECIAL,"streamproof/AutoToolTransformer","<init>","()V",false));
                     add.add(new MethodInsnNode(INVOKESPECIAL,c.name,"addTransformer","(Lkeystrokesmod/client/tweaker/transformers/Transformer;)V",false));
                     m.instructions.insertBefore(i,add);changed=true;
                 }
@@ -129,6 +134,46 @@ public final class PatchJar implements Opcodes {
         }
         if(!changed)return bytes;
         ClassWriter writer=new ClassWriter(ClassWriter.COMPUTE_MAXS); c.accept(writer); return writer.toByteArray();
+    }
+    static void patchAutoTool(ClassNode c) {
+        int constructors=0,renders=0,finishes=0;
+        for(MethodNode m:c.methods) {
+            if(m.name.equals("<init>")) for(AbstractInsnNode ins:m.instructions.toArray()) if(ins.getOpcode()==RETURN) {
+                InsnList add=new InsnList(); add.add(new VarInsnNode(ALOAD,0));
+                add.add(new MethodInsnNode(INVOKESTATIC,"streamproof/AutoToolHooks","attach","(Lkeystrokesmod/client/module/Module;)V",false));
+                m.instructions.insertBefore(ins,add); constructors++;
+            }
+            if(m.name.equals("onRenderTick") && m.desc.equals("(Lnet/minecraftforge/fml/common/gameevent/TickEvent$RenderTickEvent;)V")) {
+                toolDelegate(m,"render",true); renders++;
+            }
+            if(m.name.equals("finishMining") && m.desc.equals("()V")) { toolDelegate(m,"finish",false); finishes++; }
+        }
+        if(constructors!=1 || renders!=1 || finishes!=1) throw new IllegalStateException("Unsupported Auto Tool layout");
+        toolEntry(c,"onDisable",null,"finish");
+        toolEntry(c,"onEnable",null,"finish");
+        toolEntry(c,"sp$toolTick","net/minecraftforge/fml/common/gameevent/TickEvent$ClientTickEvent","tick");
+        toolEntry(c,"sp$toolMouse","net/minecraftforge/client/event/MouseEvent","mouse");
+        toolEntry(c,"sp$toolKey","net/minecraftforge/fml/common/gameevent/InputEvent$KeyInputEvent","key");
+    }
+    static void toolEntry(ClassNode c,String name,String event,String target) {
+        String desc=event==null ? "()V" : "(L"+event+";)V";
+        for(MethodNode old:c.methods) if(old.name.equals(name) && old.desc.equals(desc)) throw new IllegalStateException("Existing Auto Tool hook: "+name);
+        MethodNode method=new MethodNode(ASM9,ACC_PUBLIC,name,desc,null,null);
+        if(event!=null) {
+            AnnotationNode annotation=new AnnotationNode("Lnet/minecraftforge/fml/common/eventhandler/SubscribeEvent;");
+            annotation.values=new ArrayList<>(); annotation.values.add("priority");
+            annotation.values.add(new String[]{"Lnet/minecraftforge/fml/common/eventhandler/EventPriority;","HIGHEST"});
+            method.visibleAnnotations=new ArrayList<>(); method.visibleAnnotations.add(annotation);
+        }
+        toolDelegate(method,target,event!=null); c.methods.add(method);
+    }
+    static void toolDelegate(MethodNode method,String target,boolean event) {
+        method.instructions.clear(); method.tryCatchBlocks.clear(); method.localVariables=null;
+        method.instructions.add(new VarInsnNode(ALOAD,0));
+        if(event) method.instructions.add(new VarInsnNode(ALOAD,1));
+        method.instructions.add(new MethodInsnNode(INVOKESTATIC,"streamproof/AutoToolHooks",target,
+            "(Lkeystrokesmod/client/module/Module;"+(event ? method.desc.substring(1) : ")V"),false));
+        method.instructions.add(new InsnNode(RETURN)); method.maxStack=2; method.maxLocals=event ? 2 : 1;
     }
     static boolean subscribed(MethodNode m) {
         if(m.visibleAnnotations!=null)for(AnnotationNode a:m.visibleAnnotations)if(a.desc.endsWith("/SubscribeEvent;"))return true;

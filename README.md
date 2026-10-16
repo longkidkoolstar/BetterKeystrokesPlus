@@ -3,12 +3,14 @@
 Personal feature extension and patch builder maintained by **longkidkoolstar**
 for the supplied Minecraft 1.8.9 BetterKeystrokes/Raven b+ client.
 
-**Current prerelease: 0.9.0 (Bow accuracy and charging-flick fix).** The owner reports that the earlier v5 overlay works in
+**Current prerelease: 0.9.1 (Auto Tool switching and combat mining).** The owner reports that the earlier v5 overlay works in
 their Minecraft/OBS setup. This is a user report, not a guarantee across recorders,
 OBS versions, drivers, or machines.
 
 ## Features
 
+- **Auto Tool:** reliable first-block switching and return-slot ownership, manual
+  hotbar priority, and a configurable combat hold for deliberate mining under attack.
 - **Tab health:** choose Entity or Tab independently in Nametags,
   `(ExplicitB9)NameTags`, and PlayerESP's health bar.
 - **Bow Aim:** stable full-draw aiming while charging, separate actual-charge flight
@@ -42,7 +44,7 @@ cd BetterKeystrokesPlus
 ```
 
 The builder checks the base SHA-256, downloads and checks dependency hashes, and
-writes `dist/BetterKeystrokesPlus-1.8.9-v0.9.0.jar` plus build metadata.
+writes `dist/BetterKeystrokesPlus-1.8.9-v0.9.1.jar` plus build metadata.
 It does not modify the input JAR, install a mod, edit configs, or operate OBS.
 An original JAR renamed to `.jar.disabled` is also accepted when passed explicitly.
 Use `-JavaHome 'D:/Java/jdk8'` if the required JDK is not on PATH.
@@ -121,6 +123,19 @@ lava, exhausted checks and unsupported data cannot produce Ready. These estimate
 cannot predict future dodges, random arrow spread or custom server physics.
 Live server aim behavior still needs user verification.
 
+## Auto Tool
+
+In **Player > Auto Tool**, the existing **Hotkey back** and **Max delay** settings
+are preserved. First-block delays now start reliably; the original slot is saved
+once and restored when mining stops or you return to attacking an entity. Manual
+scroll/hotbar input takes priority until Attack is released.
+
+**Combat mining guard** defaults ON. For one second after attacking/aiming attack
+at a player, hold the same block for **Combat hold (ms)** (180 ms initially) before
+an automatic tool switch. Sustained mining can continue across blocks while you
+take damage. This is a configurable intent heuristic, not perfect intent detection.
+Details and a gameplay checklist: [Auto Tool 0.9.1](docs/Auto-Tool-0.9.1.md).
+
 ## Rod Aim
 
 In **Combat**, enable **Rod Aim** (OFF by default). Hold a fishing rod with no
@@ -172,6 +187,7 @@ history resets, overlay separation, color/row conversion, borderless
 restoration, rod input/active-hook transitions and independent hook-flight simulations,
 a stable bow charge sweep, 30–240 FPS control tests, full-path collision cases,
 diagnostic ambiguity/log bounds and readiness-label capture separation,
+Auto Tool delay/return-slot/combat-hold timelines and restore-before-attack hooks,
 a real display swap, an OBS 30.1 copy-sequence simulation, and ASM 5
 transformer compatibility. Test windows remain hidden. They do not start Minecraft,
 OBS, a recording, or a stream. The GitHub workflow checks repository hygiene,

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.9.1 — Auto Tool switching and combat mining (prerelease)
+
+- Fixed first/same-material mining delays that could wait indefinitely. Delays
+  now begin on a specific block/attempt and use monotonic time.
+- Save the original hotbar slot only on an actual automatic change. Restore on
+  release, target loss, GUI/focus/use pauses and disable; never overwrite the
+  return slot when choosing another tool mid-session or override manual hotbar input.
+- Added action hooks that restore the original slot before vanilla's held-item
+  synchronization/attack packet and select tools before block dig calculations.
+- Added Combat mining guard (ON) and Combat hold (180 ms) for new block holds
+  shortly after attacking a player. Continuous mining and incoming damage do not
+  disable mining, allowing deliberate bed-defense breaking under attack.
+- Preserve Auto Tool's existing module/config identities, Hotkey back and Max delay.
+  Use configured Attack/hotbar bindings and dig speed/Efficiency/harvest capability.
+- Added ownership, timing, combat-intent, ranking and action-transformer checks.
+  Live gameplay behavior still needs user testing. Bow/Rod/overlay source is unchanged.
+
 ## 0.9.0 — Bow accuracy and charging-flick fix (prerelease)
 
 - Separated stable full-draw camera aiming from actual-charge shot assessment, so

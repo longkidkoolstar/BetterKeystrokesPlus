@@ -27,6 +27,9 @@ Use it as the source of truth for future feature requests.
   Preserve this separation; partial-charge camera goals recreate the reported upward flick.
 - Ready is a conservative model check, not a guaranteed hit. Keep ambiguous arrow
   outcomes unknown and diagnostic files local; never publish gameplay logs.
+- Auto Tool keeps its original module/setting identities. Save a return slot only
+  for owned automatic switches, respect manual hotbar input, and keep deliberate
+  combat mining possible. Restore before vanilla's attack held-item synchronization.
 
 ## Build and check
 

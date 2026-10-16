@@ -29,6 +29,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Rod activation/trajectory checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Bow accuracy/control checks failed.' }
 & $context.Java -Xverify:all -classpath $classpath streamproof.BowDiagnosticsProbe
 if ($LASTEXITCODE -ne 0) { throw 'Bow diagnostics checks failed.' }
+& $context.Java -Xverify:all -classpath $classpath streamproof.AutoToolProbe
+if ($LASTEXITCODE -ne 0) { throw 'Auto Tool ownership/intent checks failed.' }
 $natives = Join-Path $PSScriptRoot '.build/natives'
 New-Item -ItemType Directory -Force -Path $natives | Out-Null
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -53,6 +55,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Legacy Java rod checks failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Legacy Java bow accuracy checks failed.' }
 & $CompatibilityJava -Xverify:all -classpath $classpath streamproof.BowDiagnosticsProbe
 if ($LASTEXITCODE -ne 0) { throw 'Legacy Java bow diagnostics checks failed.' }
+& $CompatibilityJava -Xverify:all -classpath $classpath streamproof.AutoToolProbe
+if ($LASTEXITCODE -ne 0) { throw 'Legacy Java Auto Tool checks failed.' }
 $legacyClasspath = "$($deps['jna-legacy']);$classpath"
 & $CompatibilityJava "-Dorg.lwjgl.librarypath=$natives" -Xverify:all -classpath $legacyClasspath OverlayProbe
 if ($LASTEXITCODE -ne 0) { throw 'Legacy JNA overlay probe failed.' }
@@ -61,6 +65,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Borderless restore probe failed.' }
 & $CompatibilityJava "-Dorg.lwjgl.librarypath=$natives" -Xverify:all -classpath $legacyClasspath streamproof.NativeCaptureProbe
 if ($LASTEXITCODE -ne 0) { throw 'Native OBS copy-sequence probe failed.' }
 if ($MinecraftJar) {
+    & $context.Java -Xverify:all -classpath $classpath AutoToolTransformerProbe $MinecraftJar
+    if ($LASTEXITCODE -ne 0) { throw 'Auto Tool action transformer probe failed.' }
+    & $CompatibilityJava -Xverify:all -classpath "$($deps['asm5']);$classpath" AutoToolTransformerProbe $MinecraftJar
+    if ($LASTEXITCODE -ne 0) { throw 'ASM 5 Auto Tool action probe failed.' }
     & $context.Java -Xverify:all -classpath $classpath BowTelemetryProbe $MinecraftJar
     if ($LASTEXITCODE -ne 0) { throw 'Bow telemetry transformer probe failed.' }
     & $CompatibilityJava -Xverify:all -classpath "$($deps['asm5']);$classpath" BowTelemetryProbe $MinecraftJar
